@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // community libraries
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_accessibility_service/flutter_accessibility_service.dart';
 
 // custom modules
 import 'package:horizon/widgets/ModPhoto.dart';
@@ -21,30 +22,30 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(//color: Colors.transparent,
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: Center(child: Text("${widget.name}\'s Profile")),
-          leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () {},),
-          actions: <Widget>[
-            IconButton(icon: Icon(FontAwesomeIcons.rocket), 
-            onPressed: () async {},),
-          ],
+      home: SafeArea(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Center(child: Text("$widget.name\'s Profile")),
+            leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () {},),
+            actions: <Widget>[
+              IconButton(icon: Icon(FontAwesomeIcons.rocket), 
+                onPressed: () async {
+                        await FlutterAccessibilityService
+                            .requestAccessibilityPermission();
+                      }
+              ),
+            ],
+          ),
+          body: ListView (
+            children: <Widget>[
+              ModPhoto(widget.name),
+              StatisticsView(),
+              OpportunitiesView(),
+           ]
+          ), 
         ),
-        body: ListView (
-          children: <Widget>[
-            ModPhoto(widget.name),
-            StatisticsView(),
-            OpportunitiesView(),
-          ]
-        ), 
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {},
-          child: Icon(Icons.add)
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButtonAnimator: FloatingActionButtonAnimator.scaling,
       ),
     );
   }
