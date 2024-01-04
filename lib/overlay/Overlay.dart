@@ -5,28 +5,32 @@ class BlockingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.network(
-              'https://i.pinimg.com/736x/87/43/a1/8743a10b2b1958f8541af429ecf7e03e.jpg',
-              width: 120.0,
-            ),
-            const SizedBox(height: 15.0),
-            const Text(
-              'Ayo here me out',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 25.0,
+    return  FractionallySizedBox(
+        heightFactor: 0.5,
+        widthFactor: 0.5,        
+        child: Container (
+          color: Colors.white,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.network(
+                'https://i.pinimg.com/736x/87/43/a1/8743a10b2b1958f8541af429ecf7e03e.jpg',
+                width: 120.0,
               ),
-            ),
-          ],
+              const SizedBox(height: 15.0),
+              const Text(
+                'Ayo here me out',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 25.0,
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+      )
     );
   }
 }

@@ -1,28 +1,47 @@
 import 'dart:async';
 import 'dart:developer';
+import 'dart:isolate';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_accessibility_service/accessibility_event.dart';
 import 'package:flutter_accessibility_service/constants.dart';
 import 'package:flutter_accessibility_service/flutter_accessibility_service.dart';
+import 'package:flutter_overlay_window/flutter_overlay_window.dart';
 
 import 'package:horizon/overlay/Overlay.dart';
 import 'package:horizon/pages/Profile.dart';
+import 'package:horizon/overlay/text_field_overlay.dart';
 
 import 'package:collection/collection.dart';
 
 @pragma("vm:entry-point")
-void accessibilityOverlay() {
+void overlayMain() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(
     const MaterialApp(
+      home: TextFieldOverlay(),
       debugShowCheckedModeBanner: false,
-      home: BlockingOverlay(),
     ),
   );
 }
 
+void accessibilityOverlay() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (await FlutterOverlayWindow.isActive()) return;
+  await FlutterOverlayWindow.showOverlay(
+  enableDrag: false,
+  overlayTitle: "X-SLAYER",
+  overlayContent: 'Overlay Enabled',
+  flag: OverlayFlag.clickThrough,
+  visibility: NotificationVisibility.visibilityPublic,
+  width: WindowSize.matchParent,
+  );
+}
+
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatefulWidget {
@@ -40,9 +59,27 @@ class _MyAppState extends State<MyApp> {
   bool setText = false;
   bool clickFirstSearch = false;
 
+  static const String _kPortNameOverlay = 'OVERLAY';
+  static const String _kPortNameHome = 'UI';
+  final _receivePort = ReceivePort();
+  SendPort? homePort;
+  String? latestMessageFromOverlay;
+
   @override
   void initState() {
     super.initState();
+    if (homePort != null) return;
+    final res = IsolateNameServer.registerPortWithName(
+      _receivePort.sendPort,
+      _kPortNameHome,
+    );
+    log("$res: OVERLAY");
+    _receivePort.listen((message) {
+      print("message from OVERLAY: $message");
+      setState(() {
+        latestMessageFromOverlay = 'Latest Message From Overlay: $message';
+      });
+    });
   }
 
   void handleAccessiblityStream() {
@@ -57,18 +94,17 @@ class _MyAppState extends State<MyApp> {
       setState(() {
         events.add(event);
       });
-      // automateScroll(event);
-      // log("$event");
-      // automateWikipedia(event);
-      handleOverlay(event);
+
+      FlutterOverlayWindow.shareData(event);
+      defeatInstagram(event);
     });
   }
 
   void handleOverlay(AccessibilityEvent event) async {
-    if (event.packageName!.contains('youtube')) {
+    if (event.packageName!.contains('instagram')) {
       log('$event');
     }
-    if (event.packageName!.contains('youtube') && event.isFocused!) {
+    if (event.packageName!.contains('instagram') && event.isFocused!) {
       eventDateTime = event.eventTime!;
       await FlutterAccessibilityService.showOverlayWindow();
     } else if (eventDateTime.difference(event.eventTime!).inSeconds.abs() > 2 ||
@@ -100,6 +136,17 @@ class _MyAppState extends State<MyApp> {
         await doAction(item, NodeAction.actionSelect);
       }
     }
+  }
+
+  void defeatInstagram(AccessibilityEvent event) async {
+    if (!event.packageName!.contains('instagram')) return;
+    log('$event');
+    final searchIt = [...event.subNodes!, event].firstWhereOrNull(
+      (element) => element.mapId!.contains('sponsored') && element.isClickable!,
+    );
+    if (searchIt != null) {
+      await doAction(searchIt, NodeAction.actionScrollForward);
+      }
   }
 
   Future<bool> doAction(
@@ -148,10 +195,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Profile(),
         floatingActionButton: FloatingActionButton(
-          onPressed: handleAccessiblityStream,
+          onPressed: accessibilityOverlay,
           child: Icon(Icons.add)
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

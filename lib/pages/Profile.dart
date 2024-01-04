@@ -27,7 +27,7 @@ class _ProfileState extends State<Profile> {
       home: SafeArea(
         child: Scaffold(
           appBar: AppBar(
-            title: Center(child: Text("$widget.name\'s Profile")),
+            title: Center(child: Text("${widget.name}\'s Profile")),
             leading: IconButton(icon: Icon(Icons.arrow_back), onPressed: () {},),
             actions: <Widget>[
               IconButton(icon: Icon(FontAwesomeIcons.rocket), 
